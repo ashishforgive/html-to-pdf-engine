@@ -1,0 +1,53 @@
+{
+  "name": "html-to-pdf-engine",
+  "version": "1.0.0",
+  "description": "A modern, dependency-free HTML → PDF rendering engine for the browser.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "logo.svg",
+    "logo.png"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "dev": "vite",
+    "test": "vitest"
+  },
+  "keywords": [
+    "html",
+    "pdf",
+    "html-to-pdf",
+    "pdf-engine",
+    "canvas",
+    "browser-pdf",
+    "dom-to-pdf",
+    "react pdf",
+    "typescript pdf",
+    "print to pdf",
+    "export pdf",
+    "web-to-pdf",
+    "client-side pdf",
+    "pdf renderer"
+  ],
+  "author": "Ashish Kumar",
+  "license": "MIT",
+  "homepage": "https://github.com/YourGitHubName/html-to-pdf-engine#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YourGitHubName/html-to-pdf-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YourGitHubName/html-to-pdf-engine/issues"
+  },
+  "sideEffects": false,
+  "devDependencies": {
+    "rollup-plugin-dts": "^6.3.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.7",
+    "vitest": "^4.0.15"
+  }
+}
