@@ -1,6 +1,6 @@
 {
   "name": "html-to-pdf-engine",
-  "version": "1.0.0",
+  "version": "1.0.22",
   "description": "A modern, dependency-free HTML → PDF rendering engine for the browser.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -34,13 +34,13 @@
   ],
   "author": "Ashish Kumar",
   "license": "MIT",
-  "homepage": "https://github.com/YourGitHubName/html-to-pdf-engine#readme",
+  "homepage": "https://github.com/ashishforgive/html-to-pdf-engine#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YourGitHubName/html-to-pdf-engine.git"
+    "url": "https://github.com/ashishforgive/html-to-pdf-engine.git"
   },
   "bugs": {
-    "url": "https://github.com/YourGitHubName/html-to-pdf-engine/issues"
+    "url": "https://github.com/ashishforgive/html-to-pdf-engine/issues"
   },
   "sideEffects": false,
   "devDependencies": {

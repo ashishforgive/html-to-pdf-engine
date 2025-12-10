@@ -5,15 +5,16 @@ interface PdfObject {
   id: number;
   content: string | Uint8Array;
   isBinary?: boolean;
+  extraDict?: string;
 }
 
 export class PdfWriter {
   private objects: PdfObject[] = [];
   private objectCount = 0;
 
-  private addObject(content: string | Uint8Array, isBinary = false): number {
+  private addObject(content: string | Uint8Array, isBinary = false, extraDict?: string): number {
     const id = ++this.objectCount;
-    this.objects.push({ id, content, isBinary });
+    this.objects.push({ id, content, isBinary, extraDict });
     return id;
   }
 
@@ -21,39 +22,42 @@ export class PdfWriter {
     this.objects = [];
     this.objectCount = 0;
 
-    const imageObjectIds: number[] = [];
+    const pageObjectIds: number[] = [];
+
+    // Reserve /Pages object so we know the ID for page parents
+    const pagesRootId = this.addObject("", false);
 
     // ---- STEP 1: Convert page canvases → encoded images ----
     for (const page of pages) {
       const imgBase64 = page.canvas.toDataURL("image/jpeg", 0.92);
       const imgBinary = base64ToBinary(imgBase64);
 
-      const objId = this.addObject(imgBinary, true);
-      imageObjectIds.push(objId);
+      const objId = this.addObject(
+        imgBinary,
+        true,
+        `/Width ${page.canvas.width} /Height ${page.canvas.height}`
+      );
+
+      const drawImage = `q ${page.canvas.width} 0 0 ${page.canvas.height} 0 0 cm /Img${objId} Do Q`;
+      const contentStream = `<< /Length ${drawImage.length} >>\nstream\n${drawImage}\nendstream`;
+      const contentId = this.addObject(contentStream);
+
+      const pageId = this.addObject(
+        `<< /Type /Page /Parent ${pagesRootId} 0 R /Resources << /XObject << /Img${objId} ${objId} 0 R >> >> /MediaBox [0 0 ${page.canvas.width} ${page.canvas.height}] /Contents ${contentId} 0 R >>`
+      );
+      pageObjectIds.push(pageId);
     }
 
-    // ---- STEP 2: Create single PDF pages ----
-    const pageObjects = imageObjectIds.map((imgId) => {
-      const pageId = this.addObject(
-        `<< /Type /Page /Parent 1 0 R /Resources << /XObject << /Img${imgId} ${imgId} 0 R >> >> /MediaBox [0 0 595 842] /Contents ${imgId + 100} 0 R >>`
-      );
-
-      // Contents stream (draw image full page):
-      this.addObject(
-        `q 595 0 0 842 0 0 cm /Img${imgId} Do Q`,
-        false // text stream, not binary
-      );
-
-      return pageId;
-    });
-
     // ---- STEP 3: Pages Root ----
-    const pagesId = this.addObject(
-      `<< /Type /Pages /Kids [${pageObjects.map((id) => `${id} 0 R`).join(" ")}] /Count ${pageObjects.length} >>`
-    );
+    const pagesRoot = this.objects.find((obj) => obj.id === pagesRootId);
+    if (pagesRoot) {
+      pagesRoot.content = `<< /Type /Pages /Kids [${pageObjectIds
+        .map((id) => `${id} 0 R`)
+        .join(" ")}] /Count ${pageObjectIds.length} >>`;
+    }
 
     // ---- STEP 4: Catalog ----
-    const catalogId = this.addObject(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`);
+    const catalogId = this.addObject(`<< /Type /Catalog /Pages ${pagesRootId} 0 R >>`);
 
     // ---- STEP 5: Build the PDF string ----
     let pdf = "%PDF-1.7\n";
@@ -65,7 +69,8 @@ export class PdfWriter {
       pdf += `${obj.id} 0 obj\n`;
 
       if (obj.isBinary) {
-        pdf += `<< /Length ${obj.content instanceof Uint8Array ? obj.content.length : 0} /Subtype /Image /Type /XObject /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode >>\nstream\n`;
+        const extra = obj.extraDict ? ` ${obj.extraDict}` : "";
+        pdf += `<< /Length ${obj.content instanceof Uint8Array ? obj.content.length : 0} /Subtype /Image /Type /XObject /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode${extra} >>\nstream\n`;
         position = pdf.length;
         pdf += "BINARY_PLACEHOLDER";
         pdf += `\nendstream\nendobj\n`;

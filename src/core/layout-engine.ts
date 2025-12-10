@@ -27,6 +27,12 @@ export class LayoutEngine {
     const footerHeightPx = options.footer?.height ? this.mmToPx(options.footer.height, dpi) : 0;
 
     this.pageHeightPx -= headerHeightPx + footerHeightPx;
+
+    if (this.pageWidthPx <= 0 || this.pageHeightPx <= 0) {
+      throw new Error(
+        "❌ Computed page size is invalid. Check margin/header/footer sizes relative to the selected format."
+      );
+    }
   }
 
   private mmToPx(mm: number, dpi: number) {
